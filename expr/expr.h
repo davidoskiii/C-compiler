@@ -3,6 +3,6 @@
 
 #include "../parser/parser.h"
 
-ASTnode *binexpr(void);
+ASTnode *binexpr(int n);
 
 #endif 

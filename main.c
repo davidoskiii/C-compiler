@@ -4,6 +4,7 @@
 
 #include "lexer/lexer.h"
 #include "parser/parser.h"
+#include "expr/expr.h"
 #include "compiler/compiler.h"
 
 static void init() {
@@ -29,7 +30,7 @@ int main(int argc, char *argv[]) {
   }
 
   scan(&Token_);
-  n = binexpr();
+  n = binexpr(0);
   printf("%d\n", interpretAST(n));
   exit(0);
 }
