@@ -1,9 +1,10 @@
 #define extern_
-  #include "data.h"
+  #include "common.h"
 #undef extern_
 
-#include "common.h"
 #include "lexer/lexer.h"
+#include "parser/parser.h"
+#include "compiler/compiler.h"
 
 static void init() {
   Line = 1;
@@ -11,27 +12,14 @@ static void init() {
 }
 
 static void usage(char *prog) {
-  fprintf(stderr, "Usage: %s infile\n", prog);
+  fprintf(stderr, "Usage: %s [path]\n", prog);
   exit(1);
 }
 
-char *tokstr[] = { "+", "-", "*", "/", "intlit" };
-
-static void scanfile() {
-  Token T;
-
-  while (scan(&T)) {
-    printf("Token %s", tokstr[T.type]);
-    if (T.type == TOKEN_INTLIT)
-      printf(", value %d", T.intvalue);
-    printf("\n");
-  }
-}
-
-
 int main(int argc, char *argv[]) {
-  if (argc != 2)
-    usage(argv[0]);
+  ASTnode *n;
+
+  if (argc != 2) usage(argv[0]);
 
   init();
 
@@ -40,6 +28,8 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  scanfile();
-  return 0;
+  scan(&Token_);
+  n = binexpr();
+  printf("%d\n", interpretAST(n));
+  exit(0);
 }

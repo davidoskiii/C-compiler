@@ -1,7 +1,6 @@
 #include <string.h>
 
 #include "../common.h"
-#include "../data.h"
 #include "lexer.h"
 
 static int chrpos(char *s, int c) {
@@ -58,7 +57,9 @@ int scan(Token *t) {
   c = skip();
 
   switch (c) {
-    case EOF: return 0;
+    case EOF:
+      t->type = TOKEN_EOF;
+      return 0;
     case '+':
       t->type = TOKEN_PLUS;
       break;
