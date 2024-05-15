@@ -20,7 +20,8 @@ static void usage(char *prog) {
 int main(int argc, char *argv[]) {
   ASTnode *n;
 
-  if (argc != 2) usage(argv[0]);
+  if (argc != 2)
+    usage(argv[0]);
 
   init();
 
@@ -29,8 +30,23 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
+  if ((Outfile = fopen("out.s", "w")) == NULL) {
+    fprintf(stderr, "Unable to create out.s\n");
+    exit(1);
+  }
+
   scan(&Token_);
   n = binexpr(0);
-  printf("%d\n", interpretAST(n));
+  generatecode(n);
+
+  fclose(Outfile);
+
+  if (system("cc -o a.out out.s") != 0) {
+    fprintf(stderr, "Error compiling assembly file\n");
+    exit(1);
+  }
+
+  remove("out.s");
+
   exit(0);
 }

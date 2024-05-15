@@ -4,5 +4,6 @@
 #include "../parser/parser.h"
 
 int interpretAST(ASTnode *n);
+void generatecode(ASTnode *n);
 
 #endif 
