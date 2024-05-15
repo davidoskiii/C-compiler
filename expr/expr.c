@@ -1,19 +1,29 @@
 #include "../lexer/lexer.h"
 #include "../common.h"
+#include "../sym/sym.h"
 #include "expr.h"
 
 static ASTnode *primary(void) {
   ASTnode *n;
+  int id;
 
   switch (Token_.type) {
-    case TOKEN_INTLIT:
+    case TOKEN_INTLIT: {
       n = mkastleaf(AST_INTLIT, Token_.intvalue);
-      scan(&Token_);
-      return n;
-    default:
-      fprintf(stderr, "Syntax error on line %d, token %d\n", Line, Token_.type);
-      exit(1);
+      break;
+    }
+    case TOKEN_IDENTIFIER: {
+      id = findglob(Text);
+      if (id == -1) fatals("Unknown variable", Text);
+
+      n = mkastleaf(AST_IDENT, id);
+      break;
+    }
+    default: fatald("Syntax error, token", Token_.type);
   }
+
+  scan(&Token_);
+  return (n);
 }
 
 
@@ -51,7 +61,7 @@ ASTnode *binexpr(int ptp) {
   left = primary();
 
   tokentype = Token_.type;
-  if (tokentype == TOKEN_EOF) return left;
+  if (tokentype == TOKEN_SEMICOLON) return left;
 
   while (op_precedence(tokentype) > ptp) {
     scan(&Token_);
@@ -61,8 +71,7 @@ ASTnode *binexpr(int ptp) {
     left = mkastnode(arithop(tokentype), left, right, 0);
 
     tokentype = Token_.type;
-    if (tokentype == TOKEN_EOF)
-      return left;
+    if (tokentype == TOKEN_SEMICOLON) return left;
   }
 
   return left;

@@ -4,7 +4,7 @@
 
 #include "lexer/lexer.h"
 #include "parser/parser.h"
-#include "expr/expr.h"
+#include "stmt/stmt.h"
 #include "compiler/compiler.h"
 
 static void init() {
@@ -36,8 +36,9 @@ int main(int argc, char *argv[]) {
   }
 
   scan(&Token_);
-  n = binexpr(0);
-  generatecode(n);
+  genpreamble();
+  statements();
+  genpostamble();
 
   fclose(Outfile);
 

@@ -1,38 +1,21 @@
 #include "compiler.h"
-#include "../assembly/assembly.h"
+#include "../sym/sym.h"
 
 static char *ASTop[] = { "+", "-", "*", "/" };
 
-int interpretAST(struct ASTnode *n) {
-  int leftval, rightval;
 
-  if (n->left) leftval = interpretAST(n->left);
-  if (n->right) rightval = interpretAST(n->right);
+void genpreamble()        { cgpreamble(); }
+void genpostamble()       { cgpostamble(); }
+void genfreeregs()        { freeall_registers(); }
+void genprintint(int reg) { cgprintint(reg); }
 
-  switch (n->op) {
-    case AST_ADD:
-      return leftval + rightval;
-    case AST_SUBTRACT:
-      return leftval - rightval;
-    case AST_MULTIPLY:
-      return leftval * rightval;
-    case AST_DIVIDE:
-      return leftval / rightval;
-    case AST_INTLIT:
-      return n->intvalue;
-    default:
-      fprintf(stderr, "Unknown AST operator %d\n", n->op);
-      exit(1);
-  }
-}
-
-static int genAST(ASTnode *n) {
+int genAST(struct ASTnode *n, int reg) {
   int leftreg, rightreg;
 
   if (n->left)
-    leftreg = genAST(n->left);
+    leftreg = genAST(n->left, -1);
   if (n->right)
-    rightreg = genAST(n->right);
+    rightreg = genAST(n->right, leftreg);
 
   switch (n->op) {
     case AST_ADD:
@@ -44,18 +27,15 @@ static int genAST(ASTnode *n) {
     case AST_DIVIDE:
       return (cgdiv(leftreg,rightreg));
     case AST_INTLIT:
-      return (cgload(n->intvalue));
+      return (cgloadint(n->v.intvalue));
+    case AST_IDENT:
+      return (cgloadglob(Gsym[n->v.id].name));
+    case AST_LVIDENT:
+      return (cgstorglob(reg, Gsym[n->v.id].name));
+    case AST_ASSIGN:
+      return (rightreg);
     default:
       fprintf(stderr, "Unknown AST operator %d\n", n->op);
       exit(1);
   }
-}
-
-void generatecode(ASTnode *n) {
-  int reg;
-
-  cgpreamble();
-  reg= genAST(n);
-  cgprintint(reg);
-  cgpostamble();
 }

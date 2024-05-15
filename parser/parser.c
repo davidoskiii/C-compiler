@@ -13,7 +13,7 @@ ASTnode *mkastnode(int op, ASTnode *left, ASTnode *right, int intvalue) {
   n->op = op;
   n->left = left;
   n->right = right;
-  n->intvalue = intvalue;
+  n->v.intvalue = intvalue;
   return n;
 }
 

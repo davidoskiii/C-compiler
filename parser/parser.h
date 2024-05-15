@@ -6,14 +6,18 @@
 typedef struct ASTnode ASTnode;
 
 enum {
-  AST_ADD, AST_SUBTRACT, AST_MULTIPLY, AST_DIVIDE, AST_INTLIT
+  AST_ADD, AST_SUBTRACT, AST_MULTIPLY, AST_DIVIDE, AST_INTLIT,
+  AST_IDENT, AST_LVIDENT, AST_ASSIGN
 };
 
 struct ASTnode {
   int op;
   ASTnode *left;
   ASTnode *right;
-  int intvalue;
+  union {
+    int intvalue;
+    int id;
+  } v;
 };
 
 ASTnode *mkastnode(int op, ASTnode *left, ASTnode *right, int intvalue);
