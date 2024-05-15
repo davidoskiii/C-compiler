@@ -47,7 +47,5 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  remove("out.s");
-
   exit(0);
 }

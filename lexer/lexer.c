@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "../common.h"
+#include "../utils/utils.h"
 #include "lexer.h"
 
 static int chrpos(char *s, int c) {
@@ -108,7 +109,35 @@ int scan(Token *t) {
       t->type = TOKEN_SEMICOLON;
       break;
     case '=':
-      t->type = TOKEN_EQUALS; 
+      if ((c = next()) == '=') {
+        t->type = TOKEN_EQ;
+      } else {
+        putback(c);
+        t->type = TOKEN_ASSIGN;
+      }
+      break;
+    case '!':
+      if ((c = next()) == '=') {
+        t->type = TOKEN_NE;
+      } else {
+        fatalc("Unrecognised character", c);
+      }
+      break;
+    case '<':
+      if ((c = next()) == '=') {
+        t->type = TOKEN_LE;
+      } else {
+        putback(c);
+        t->type = TOKEN_LT;
+      }
+      break;
+    case '>':
+      if ((c = next()) == '=') {
+        t->type = TOKEN_GE;
+      } else {
+        putback(c);
+        t->type = TOKEN_GT;
+      }
       break;
     default: {
       if (isdigit(c)) {

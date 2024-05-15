@@ -37,13 +37,25 @@ int arithop(int tokentype) {
       return AST_MULTIPLY;
     case TOKEN_SLASH:
       return AST_DIVIDE;
+    case TOKEN_EQ:
+      return AST_EQ;
+    case TOKEN_NE:
+      return AST_NE;
+    case TOKEN_LT:
+      return AST_LT;
+    case TOKEN_GT:
+      return AST_GT;
+    case TOKEN_LE:
+      return AST_LE;
+    case TOKEN_GE:
+      return AST_GE;
     default:
       fprintf(stderr, "Syntax error on line %d, token %d\n", Line, tokentype);
       exit(1);
   }
 }
 
-static int OpPrec[] = { 0, 10, 10, 20, 20, 0 };
+static int OpPrec[] = { 0, 10, 10, 20, 20, 30, 30, 40, 40, 40, 40, 0 };
 
 static int op_precedence(int tokentype) {
   int prec = OpPrec[tokentype];

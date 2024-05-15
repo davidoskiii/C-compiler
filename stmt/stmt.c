@@ -36,7 +36,7 @@ void assignment_statement(void) {
   }
   right = mkastleaf(AST_LVIDENT, id);
 
-  match(TOKEN_EQUALS, "=");
+  match(TOKEN_ASSIGN, "=");
 
   left = binexpr(0);
 
