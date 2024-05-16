@@ -1,42 +1,18 @@
 #include "../common.h"
-#include "../utils/utils.h"
 #include "../sym/sym.h"
+#include "../parser/parser.h"
 #include "stmt.h"
 
-void var_declaration(void) {
-  match(TOKEN_INT, "int");
-  ident();
-  addglob(globals.text);
-  genglobsym(globals.text);
-  semi();
-}
-
-void print_statement(void) {
-  ASTnode *tree;
-  int reg;
-
-  match(TOKEN_PRINT, "print");
-
-  tree = binexpr(0);
-  reg = genAST(tree, -1);
-  genprintint(reg);
-  genfreeregs();
-
-  semi();
-}
-
-void assignment_statement(void) {
+void assignment_statement(int declaration) {
   ASTnode *left, *right, *tree;
   int id;
 
-  ident();
-
   if ((id = findglob(globals.text)) == -1) {
-    fatals("Undeclared variable", globals.text);
+    errorAtCurrent("Undeclared variable");
   }
   right = mkastleaf(AST_LVIDENT, id);
 
-  match(TOKEN_ASSIGN, "=");
+  consume(TOKEN_EQUAL, "Expected '=' after identifier");
 
   left = binexpr(0);
 
@@ -45,11 +21,38 @@ void assignment_statement(void) {
   genAST(tree, -1);
   genfreeregs();
 
-  semi();
+  consume(TOKEN_SEMICOLON, "Expected ';' after new value");
+}
+
+void var_declaration(void) {
+  advance();
+  consume(TOKEN_IDENTIFIER, "Expected identifier");
+  addglob(globals.text);
+  genglobsym(globals.text);
+
+  if (check(TOKEN_EQUAL)) {
+    assignment_statement(1);
+  } else {
+    consume(TOKEN_SEMICOLON, "Expected ';' after indentifier");
+  }
+}
+
+void print_statement(void) {
+  ASTnode *tree;
+  int reg;
+
+  advance();
+
+  tree = binexpr(0);
+  reg = genAST(tree, -1);
+  genprintint(reg);
+  genfreeregs();
+
+  consume(TOKEN_SEMICOLON, "Expected ';' after printed value");
 }
 
 void statements(void) {
-  while (1) {
+  while (true) {
     switch (globals.token.type) {
     case TOKEN_PRINT:
       print_statement();
@@ -58,12 +61,12 @@ void statements(void) {
       var_declaration();
       break;
     case TOKEN_IDENTIFIER:
-      assignment_statement();
+      assignment_statement(0);
       break;
     case TOKEN_EOF:
       return;
     default:
-      fatald("Syntax error, token", globals.token.type);
+      errorAtCurrent("Syntax error, token");
     }
   }
 }

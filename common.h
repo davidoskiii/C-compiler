@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "lexer/lexer.h"
 #include "sym/sym.h"

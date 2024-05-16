@@ -1,28 +1,30 @@
-#include "../lexer/lexer.h"
+#include "../parser/parser.h"
 #include "../common.h"
 #include "../sym/sym.h"
+#include <stdio.h>
 #include "expr.h"
 
 static ASTnode *primary(void) {
   ASTnode *n;
   int id;
 
-  switch (globals.token.type) {
-    case TOKEN_INTLIT: {
-      n = mkastleaf(AST_INTLIT, globals.token.intvalue);
+  switch (parser.current.type) {
+    case TOKEN_INTVAL: {
+      printf("intvalue: %d\n", parser.current.intvalue);
+      n = mkastleaf(AST_INTLIT, parser.current.intvalue);
       break;
     }
     case TOKEN_IDENTIFIER: {
       id = findglob(globals.text);
-      if (id == -1) fatals("Unknown variable", globals.text);
+      if (id == -1) errorAtCurrent("Unknown variable");
 
       n = mkastleaf(AST_IDENT, id);
       break;
     }
-    default: fatald("Syntax error, token", globals.token.type);
+    default: errorAtCurrent("Syntax error");
   }
+  advance();
 
-  scan(&globals.token);
   return (n);
 }
 
@@ -37,20 +39,20 @@ int arithop(int tokentype) {
       return AST_MULTIPLY;
     case TOKEN_SLASH:
       return AST_DIVIDE;
-    case TOKEN_EQ:
+    case TOKEN_EQUAL_EQUAL:
       return AST_EQ;
-    case TOKEN_NE:
+    case TOKEN_BANG_EQUAL:
       return AST_NE;
-    case TOKEN_LT:
+    case TOKEN_LESS:
       return AST_LT;
-    case TOKEN_GT:
+    case TOKEN_GREATER:
       return AST_GT;
-    case TOKEN_LE:
+    case TOKEN_LESS_EQUAL:
       return AST_LE;
-    case TOKEN_GE:
+    case TOKEN_GREATER_EQUAL:
       return AST_GE;
     default:
-      fprintf(stderr, "Syntax error on line %d, token %d\n", globals.line, tokentype);
+      fprintf(stderr, "Syntax error on line %d, token %d\n", parser.current.line, tokentype);
       exit(1);
   }
 }
@@ -60,31 +62,26 @@ static int OpPrec[] = { 0, 10, 10, 20, 20, 30, 30, 40, 40, 40, 40, 0 };
 static int op_precedence(int tokentype) {
   int prec = OpPrec[tokentype];
   if (prec == 0) {
-    fprintf(stderr, "Syntax error on line %d, token %d\n", globals.line, tokentype);
+    fprintf(stderr, "Syntssax error on line %d, token %d\n", parser.current.line, tokentype);
     exit(1);
   }
   return prec;
 }
 
 ASTnode *binexpr(int ptp) {
-  ASTnode *left, *right;
-  int tokentype;
+  ASTnode *n, *left, *right;
+  int nodetype;
 
   left = primary();
 
-  tokentype = globals.token.type;
-  if (tokentype == TOKEN_SEMICOLON) return left;
+  if (parser.current.type == TOKEN_EOF) return (left);
 
-  while (op_precedence(tokentype) > ptp) {
-    scan(&globals.token);
+  nodetype = arithop(parser.current.type);
 
-    right = binexpr(OpPrec[tokentype]);
+  advance();
 
-    left = mkastnode(arithop(tokentype), left, right, 0);
+  right = binexpr(0);
 
-    tokentype = globals.token.type;
-    if (tokentype == TOKEN_SEMICOLON) return left;
-  }
-
-  return left;
+  n = mkastnode(nodetype, left, right, 0);
+  return (n);
 }

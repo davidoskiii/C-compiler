@@ -1,5 +1,6 @@
 #include <string.h>
-#include "../utils/utils.h"
+#include "../parser/parser.h"
+#include "../common.h"
 #include "sym.h"
 
 static int Globs = 0;
@@ -17,7 +18,7 @@ int findglob(char *s) {
 static int newglob(void) {
   int p;
 
-  if ((p = Globs++) >= NSYMBOLS) fatal("Too many global symbols");
+  if ((p = Globs++) >= NSYMBOLS) errorAtCurrent("Too many global symbols");
   return (p);
 }
 

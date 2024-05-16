@@ -1,8 +1,10 @@
+#include <stdio.h>
 #define extern_
   #include "common.h"
 #undef extern_
 
 #include "lexer/lexer.h"
+#include "parser/parser.h"
 #include "node/node.h"
 #include "stmt/stmt.h"
 #include "compiler/compiler.h"
@@ -11,12 +13,65 @@ Globals globals;
 
 static void init() {
   globals.line = 1;
-  globals.line = '\n';
+  globals.putback = '\n';
 }
 
 static void usage(char *prog) {
   fprintf(stderr, "Usage: %s [path]\n", prog);
   exit(1);
+}
+
+char* readFile(const char* path) {
+  FILE* file = fopen(path, "rb");
+  if (file == NULL) {
+    fprintf(stderr, "Could not open file \"%s\".\n", path);
+    fprintf(stderr, "Usage: luminique [path]\n");
+    exit(74);
+  }
+
+  fseek(file, 0L, SEEK_END);
+  size_t fileSize = ftell(file);
+  rewind(file);
+
+  char* buffer = (char*)malloc(fileSize + 1);
+  if (buffer == NULL) {
+    fprintf(stderr, "Not enough memory to read \"%s\".\n", path);
+    exit(74);
+  }
+
+  size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
+  if (bytesRead < fileSize) {
+    fprintf(stderr, "Could not read file \"%s\".\n", path);
+    exit(74);
+  }
+
+  buffer[bytesRead] = '\0';
+
+  fclose(file);
+  return buffer;
+}
+
+int interpretAST(struct ASTnode *n) {
+  int leftval, rightval;
+
+  if (n->left) leftval = interpretAST(n->left);
+  if (n->right) rightval = interpretAST(n->right);
+
+  switch (n->op) {
+    case AST_ADD:
+      return leftval + rightval;
+    case AST_SUBTRACT:
+      return leftval - rightval;
+    case AST_MULTIPLY:
+      return leftval * rightval;
+    case AST_DIVIDE:
+      return leftval / rightval;
+    case AST_INTLIT:
+      return n->v.intvalue;
+    default:
+      fprintf(stderr, "Unknown AST operator %d\n", n->op);
+      exit(1);
+  }
 }
 
 int main(int argc, char *argv[]) {
@@ -37,9 +92,16 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  scan(&globals.token);
+  initLexer(readFile(argv[1]));
+  parser.hadError = false;
+  parser.panicMode = false;
+  
+  advance();
+  advance();
+
   genpreamble();
-  statements();
+  n = binexpr(0);
+  printf("%d\n", interpretAST(n));
   genpostamble();
 
   fclose(globals.outfile);

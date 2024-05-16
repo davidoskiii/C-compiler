@@ -3,7 +3,7 @@
 
 #include "../node/node.h"
 
-ASTnode *binexpr(int n);
+ASTnode *binexpr(int ptp);
 void fatal(char *s);
 void fatals(char *s1, char *s2);
 void fatald(char *s, int d);

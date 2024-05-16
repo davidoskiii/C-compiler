@@ -1,165 +1,195 @@
 #include <string.h>
 
 #include "../common.h"
-#include "../utils/utils.h"
 #include "lexer.h"
 
-static int chrpos(char *s, int c) {
-  char *p;
+typedef struct {
+  const char* start;
+  const char* current;
+  int line;
+} Lexer;
 
-  p = strchr(s, c);
-  return (p ? p - s : -1);
+Lexer lexer;
+
+void initLexer(const char* source) {
+  lexer.start = source;
+  lexer.current = source;
+  lexer.line = 1;
 }
 
-static int next(void) {
-  int c;
-
-  if (globals.putback) {
-    c = globals.putback;
-    globals.putback = 0;
-    return c;
-  }
-
-  c = fgetc(globals.infile);
-  if ('\n' == c)
-    globals.line++;
-  return c;
+static bool isAlpha(char c) {
+  return (c >= 'a' && c <= 'z') ||
+         (c >= 'A' && c <= 'Z') ||
+          c == '_';
 }
 
-static void putback(int c) {
-  globals.putback = c;
+static bool isDigit(char c) {
+  return c >= '0' && c <= '9';
 }
 
-static int skip(void) {
-  int c;
-
-  c = next();
-  while (' ' == c || '\t' == c || '\n' == c || '\r' == c || '\f' == c) {
-    c = next();
-  }
-  return (c);
+static bool isAtEnd() {
+  return *lexer.current == '\0';
 }
 
-static int scanint(int c) {
-  int k, val = 0;
-
-  while ((k = chrpos("0123456789", c)) >= 0) {
-    val = val * 10 + k;
-    c = next();
-  }
-
-  putback(c);
-  return val;
+static char advance() {
+  lexer.current++;
+  return lexer.current[-1];
 }
 
-static int scanident(int c, char *buf, int lim) {
-  int i = 0;
+static char peek() {
+  return *lexer.current;
+}
 
-  while (isalpha(c) || isdigit(c) || '_' == c) {
-    if (lim - 1 == i) {
-      printf("Identifier too long on line %d\n", globals.line);
-      exit(1);
-    } else if (i < lim - 1) {
-      buf[i++] = c;
+static char peekNext() {
+  if (isAtEnd()) return '\0';
+  return lexer.current[1];
+}
+
+static char peekPrevious() {
+  return lexer.current[-1];
+}
+
+static bool match(char expected) {
+  if (isAtEnd()) return false;
+  if (*lexer.current != expected) return false;
+  lexer.current++;
+  return true;
+}
+
+static bool matchNext(char expected) {
+  if (isAtEnd() || peekNext() != expected) return false;
+  lexer.current += 2;
+  return true;
+}
+
+static Token makeToken(TokenType type) {
+  Token token;
+  token.type = type;
+  token.start = lexer.start;
+  token.length = (int)(lexer.current - lexer.start);
+  token.line = lexer.line;
+  token.intvalue = 0;
+  return token;
+}
+
+static Token errorToken(const char* message) {
+  Token token;
+  token.type = TOKEN_ERROR;
+  token.start = message;
+  token.length = (int)strlen(message);
+  token.line = lexer.line;
+  return token;
+}
+
+static void skipWhitespace() {
+  for (;;) {
+    char c = peek();
+    switch (c) {
+      case ' ':
+      case '\r':
+      case '\t':
+        advance();
+        break;
+      case '\n':
+        lexer.line++;
+        advance();
+        break;
+      case '/':
+        if (peekNext() == '/') {
+          // Single-line comment: skip until the end of the line.
+          while (peek() != '\n' && !isAtEnd()) advance();
+        } else if (peekNext() == '*') {
+          // Multi-line comment: skip until the closing token '*/'.
+          advance();
+          advance();
+          while (!(peek() == '*' && peekNext() == '/') && !isAtEnd()) {
+            if (peek() == '\n') {
+              lexer.line++;
+            }
+            advance();
+          }
+
+          advance();
+          advance();
+        } else {
+          return;
+        }
+        break;
+      default:
+        return;
     }
-    c = next();
   }
-
-  putback(c);
-  buf[i] = '\0';
-  return (i);
 }
 
-static int keyword(char *s) {
-  switch (*s) {
-    case 'p':
-      if (!strcmp(s, "print"))
-        return (TOKEN_PRINT);
-      break;
-    case 'i':
-      if (!strcmp(s, "int"))
-        return (TOKEN_INT);
-      break;
+
+static TokenType checkKeyword(int start, int length,
+    const char* rest, TokenType type) {
+  if (lexer.current - lexer.start == start + length &&
+      memcmp(lexer.start + start, rest, length) == 0) {
+    return type;
   }
-  return (0);
+
+  return TOKEN_IDENTIFIER;
 }
 
-int scan(Token *t) {
-  int c, tokentype;
+static TokenType identifierType() {
+  switch (lexer.start[0]) {
+    case 'p': return checkKeyword(1, 4, "rint", TOKEN_PRINT);
+    case 'i': return checkKeyword(1, 2, "nt", TOKEN_INT);
+  }
 
-  c = skip();
+  return TOKEN_IDENTIFIER;
+}
+
+static Token identifier() {
+  while (isAlpha(peek()) || isDigit(peek())) advance();
+  return makeToken(identifierType());
+}
+
+static Token number() {
+  while (isDigit(peek())) advance();
+
+  // Look for a fractional part.
+  if (peek() == '.' && isDigit(peekNext())) {
+    return errorToken("Short's need to be implemented");
+  }
+
+  int value = strtol((lexer.current - 1), NULL, 10);
+  Token intval = makeToken(TOKEN_INTVAL);
+  intval.intvalue = value;
+  return intval;
+}
+
+Token scanToken() {
+  skipWhitespace();
+  lexer.start = lexer.current;
+
+  if (isAtEnd()) return makeToken(TOKEN_EOF);
+
+  char c = advance();
+  if (isAlpha(c)) return identifier();
+  if (isDigit(c)) return number();
 
   switch (c) {
-    case EOF:
-      t->type = TOKEN_EOF;
-      return 0;
-    case '+':
-      t->type = TOKEN_PLUS;
-      break;
-    case '-':
-      t->type = TOKEN_MINUS;
-      break;
-    case '*':
-      t->type = TOKEN_STAR;
-      break;
-    case '/':
-      t->type = TOKEN_SLASH;
-      break;
-    case ';':
-      t->type = TOKEN_SEMICOLON;
-      break;
-    case '=':
-      if ((c = next()) == '=') {
-        t->type = TOKEN_EQ;
-      } else {
-        putback(c);
-        t->type = TOKEN_ASSIGN;
-      }
-      break;
+    case '-': return makeToken(TOKEN_MINUS);
+    case '+': return makeToken(TOKEN_PLUS);
+    case '/': return makeToken(TOKEN_SLASH);
+    case '*': return makeToken(TOKEN_STAR); 
+
     case '!':
-      if ((c = next()) == '=') {
-        t->type = TOKEN_NE;
-      } else {
-        fatalc("Unrecognised character", c);
-      }
-      break;
+      if (match('=')) return makeToken(TOKEN_BANG_EQUAL);
+      else return errorToken("Need to implement !");
+    case '=':
+      return makeToken(
+          match('=') ? TOKEN_EQUAL_EQUAL : TOKEN_EQUAL);
     case '<':
-      if ((c = next()) == '=') {
-        t->type = TOKEN_LE;
-      } else {
-        putback(c);
-        t->type = TOKEN_LT;
-      }
-      break;
+      return makeToken(
+          match('=') ? TOKEN_LESS_EQUAL : TOKEN_LESS);
     case '>':
-      if ((c = next()) == '=') {
-        t->type = TOKEN_GE;
-      } else {
-        putback(c);
-        t->type = TOKEN_GT;
-      }
-      break;
-    default: {
-      if (isdigit(c)) {
-        t->intvalue = scanint(c);
-        t->type = TOKEN_INTLIT;
-        break;
-      } else if (isalpha(c) || '_' == c) {
-        scanident(c, globals.text, TEXTLEN);
-
-        if ((tokentype = keyword(globals.text))) {
-          t->type = tokentype;
-          break;
-        }
-
-        t->type = TOKEN_IDENTIFIER;
-        break;
-      }
-    }
-
-    printf("Unrecognised character %c on line %d\n", c, globals.line);
-    exit(1);
+      return makeToken(
+          match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
   }
 
-  return 1;
+  return errorToken("Unexpected character.");
 }
+
