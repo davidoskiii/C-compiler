@@ -8,19 +8,19 @@
 #include "lexer/lexer.h"
 #include "sym/sym.h"
 
-#ifndef extern_
- #define extern_ extern
-#endif
-
 #define TEXTLEN 512
 #define NSYMBOLS 1024
 
-extern_ int Line;
-extern_ int	Putback;
-extern_ FILE *Infile;
-extern_ FILE *Outfile;
-extern_ Token Token_;
-extern_ char Text[TEXTLEN + 1];
-extern_ SymbleTable Gsym[NSYMBOLS];
+typedef struct {
+  int line;
+  int	putback;
+  FILE *infile;
+  FILE *outfile;
+  Token token;
+  char text[TEXTLEN + 1];
+  SymbleTable gsym[NSYMBOLS];
+} Globals;
+
+extern Globals globals;
 
 #endif 

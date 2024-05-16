@@ -1,5 +1,5 @@
-#ifndef c_parser_h
-#define c_parser_h
+#ifndef c_node_h
+#define c_node_h
 
 #include "../common.h"
 

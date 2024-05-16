@@ -3,13 +3,15 @@
 #undef extern_
 
 #include "lexer/lexer.h"
-#include "parser/parser.h"
+#include "node/node.h"
 #include "stmt/stmt.h"
 #include "compiler/compiler.h"
 
+Globals globals;
+
 static void init() {
-  Line = 1;
-  Putback = '\n';
+  globals.line = 1;
+  globals.line = '\n';
 }
 
 static void usage(char *prog) {
@@ -25,22 +27,22 @@ int main(int argc, char *argv[]) {
 
   init();
 
-  if ((Infile = fopen(argv[1], "r")) == NULL) {
+  if ((globals.infile = fopen(argv[1], "r")) == NULL) {
     fprintf(stderr, "Unable to open %s\n", argv[1]);
     exit(1);
   }
 
-  if ((Outfile = fopen("out.s", "w")) == NULL) {
+  if ((globals.outfile = fopen("out.s", "w")) == NULL) {
     fprintf(stderr, "Unable to create out.s\n");
     exit(1);
   }
 
-  scan(&Token_);
+  scan(&globals.token);
   genpreamble();
   statements();
   genpostamble();
 
-  fclose(Outfile);
+  fclose(globals.outfile);
 
   if (system("cc -o a.out out.s") != 0) {
     fprintf(stderr, "Error compiling assembly file\n");

@@ -1,7 +1,7 @@
 #ifndef c_assembly_h
 #define c_assembly_h
 
-#include "../parser/parser.h"
+#include "../node/node.h"
 
 void freeall_registers(void);
 void cgpreamble();

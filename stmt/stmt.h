@@ -1,7 +1,7 @@
 #ifndef c_stmt_h
 #define c_stmt_h
 
-#include "../parser/parser.h"
+#include "../node/node.h"
 #include "../expr/expr.h"
 #include "../compiler/compiler.h"
 

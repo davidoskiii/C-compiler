@@ -1,7 +1,7 @@
 #ifndef c_compiler_h
 #define c_compiler_h
 
-#include "../parser/parser.h"
+#include "../node/node.h"
 #include "../assembly/assembly.h"
 
 int genAST(struct ASTnode *n, int reg);

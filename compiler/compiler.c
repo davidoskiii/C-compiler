@@ -1,9 +1,6 @@
 #include "compiler.h"
 #include "../sym/sym.h"
 
-static char *ASTop[] = { "+", "-", "*", "/" };
-
-
 void genpreamble()        { cgpreamble(); }
 void genpostamble()       { cgpostamble(); }
 void genfreeregs()        { freeall_registers(); }
@@ -29,9 +26,9 @@ int genAST(struct ASTnode *n, int reg) {
     case AST_INTLIT:
       return (cgloadint(n->v.intvalue));
     case AST_IDENT:
-      return (cgloadglob(Gsym[n->v.id].name));
+      return (cgloadglob(globals.gsym[n->v.id].name));
     case AST_LVIDENT:
-      return (cgstorglob(reg, Gsym[n->v.id].name));
+      return (cgstorglob(reg, globals.gsym[n->v.id].name));
     case AST_ASSIGN:
       return (rightreg);
     case AST_EQ:

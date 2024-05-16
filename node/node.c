@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "parser.h"
+#include "node.h"
 
 ASTnode *mkastnode(int op, ASTnode *left, ASTnode *right, int intvalue) {
   ASTnode *n;

@@ -8,7 +8,7 @@ int findglob(char *s) {
   int i;
 
   for (i = 0; i < Globs; i++) {
-    if (*s == *Gsym[i].name && !strcmp(s, Gsym[i].name)) return i;
+    if (*s == *globals.gsym[i].name && !strcmp(s, globals.gsym[i].name)) return i;
   }
   return -1;
 }
@@ -29,6 +29,6 @@ int addglob(char *name) {
     return (y);
 
   y = newglob();
-  Gsym[y].name = strdup(name);
+  globals.gsym[y].name = strdup(name);
   return (y);
 }

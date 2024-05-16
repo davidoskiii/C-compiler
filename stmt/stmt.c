@@ -6,8 +6,8 @@
 void var_declaration(void) {
   match(TOKEN_INT, "int");
   ident();
-  addglob(Text);
-  genglobsym(Text);
+  addglob(globals.text);
+  genglobsym(globals.text);
   semi();
 }
 
@@ -31,8 +31,8 @@ void assignment_statement(void) {
 
   ident();
 
-  if ((id = findglob(Text)) == -1) {
-    fatals("Undeclared variable", Text);
+  if ((id = findglob(globals.text)) == -1) {
+    fatals("Undeclared variable", globals.text);
   }
   right = mkastleaf(AST_LVIDENT, id);
 
@@ -50,7 +50,7 @@ void assignment_statement(void) {
 
 void statements(void) {
   while (1) {
-    switch (Token_.type) {
+    switch (globals.token.type) {
     case TOKEN_PRINT:
       print_statement();
       break;
@@ -63,7 +63,7 @@ void statements(void) {
     case TOKEN_EOF:
       return;
     default:
-      fatald("Syntax error, token", Token_.type);
+      fatald("Syntax error, token", globals.token.type);
     }
   }
 }

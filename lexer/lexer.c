@@ -14,20 +14,20 @@ static int chrpos(char *s, int c) {
 static int next(void) {
   int c;
 
-  if (Putback) {
-    c = Putback;
-    Putback = 0;
+  if (globals.putback) {
+    c = globals.putback;
+    globals.putback = 0;
     return c;
   }
 
-  c = fgetc(Infile);
+  c = fgetc(globals.infile);
   if ('\n' == c)
-    Line++;
+    globals.line++;
   return c;
 }
 
 static void putback(int c) {
-  Putback = c;
+  globals.putback = c;
 }
 
 static int skip(void) {
@@ -57,7 +57,7 @@ static int scanident(int c, char *buf, int lim) {
 
   while (isalpha(c) || isdigit(c) || '_' == c) {
     if (lim - 1 == i) {
-      printf("Identifier too long on line %d\n", Line);
+      printf("Identifier too long on line %d\n", globals.line);
       exit(1);
     } else if (i < lim - 1) {
       buf[i++] = c;
@@ -145,9 +145,9 @@ int scan(Token *t) {
         t->type = TOKEN_INTLIT;
         break;
       } else if (isalpha(c) || '_' == c) {
-        scanident(c, Text, TEXTLEN);
+        scanident(c, globals.text, TEXTLEN);
 
-        if ((tokentype = keyword(Text))) {
+        if ((tokentype = keyword(globals.text))) {
           t->type = tokentype;
           break;
         }
@@ -157,7 +157,7 @@ int scan(Token *t) {
       }
     }
 
-    printf("Unrecognised character %c on line %d\n", c, Line);
+    printf("Unrecognised character %c on line %d\n", c, globals.line);
     exit(1);
   }
 
