@@ -90,6 +90,13 @@ int cgmul(int r1, int r2) {
   return(r2);
 }
 
+int cgnegate(int r) {
+  int zeroReg = cgloadint(0);
+  int resultReg = cgsub(zeroReg, r);
+  free_register(zeroReg);
+  return resultReg;
+}
+
 int cgdiv(int r1, int r2) {
   fprintf(globals.outfile, "\tmovq\t%s,%%rax\n", reglist[r1]);
   fprintf(globals.outfile, "\tcqo\n");

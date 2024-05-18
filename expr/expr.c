@@ -62,26 +62,31 @@ static int OpPrec[] = { 0, 10, 10, 20, 20, 30, 30, 40, 40, 40, 40, 0 };
 static int op_precedence(int tokentype) {
   int prec = OpPrec[tokentype];
   if (prec == 0) {
-    fprintf(stderr, "Syntssax error on line %d, token %d\n", parser.current.line, tokentype);
+    fprintf(stderr, "Syntax error on line %d, token %d\n", parser.current.line, tokentype);
     exit(1);
   }
   return prec;
 }
 
-ASTnode *binexpr(int ptp) {
-  ASTnode *n, *left, *right;
-  int nodetype;
+struct ASTnode *binexpr(int ptp) {
+  struct ASTnode *left, *right;
+  int tokentype;
 
   left = primary();
 
-  if (parser.current.type == TOKEN_EOF) return (left);
+  tokentype = parser.current.type;
+  if (tokentype == TOKEN_SEMICOLON) return (left);
 
-  nodetype = arithop(parser.current.type);
+  while (op_precedence(tokentype) > ptp) {
+    advance();
 
-  advance();
+    right = binexpr(OpPrec[tokentype]);
 
-  right = binexpr(0);
+    left = mkastnode(arithop(tokentype), left, right, 0);
 
-  n = mkastnode(nodetype, left, right, 0);
-  return (n);
+    tokentype = parser.current.type;
+    if (tokentype == TOKEN_SEMICOLON) return (left);
+  }
+
+  return (left);
 }

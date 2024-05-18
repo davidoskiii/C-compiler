@@ -18,7 +18,7 @@ void assignment_statement(int declaration) {
 
   tree = mkastnode(AST_ASSIGN, left, right, 0);
 
-  genAST(tree, -1);
+  genAST(tree);
   genfreeregs();
 
   consume(TOKEN_SEMICOLON, "Expected ';' after new value");
@@ -44,7 +44,7 @@ void print_statement(void) {
   advance();
 
   tree = binexpr(0);
-  reg = genAST(tree, -1);
+  reg = genAST(tree);
   genprintint(reg);
   genfreeregs();
 
@@ -53,7 +53,7 @@ void print_statement(void) {
 
 void statements(void) {
   while (true) {
-    switch (globals.token.type) {
+    switch (parser.current.type) {
     case TOKEN_PRINT:
       print_statement();
       break;

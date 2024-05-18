@@ -6,7 +6,6 @@
 #include "lexer/lexer.h"
 #include "parser/parser.h"
 #include "node/node.h"
-#include "stmt/stmt.h"
 #include "compiler/compiler.h"
 
 Globals globals;
@@ -99,10 +98,13 @@ int main(int argc, char *argv[]) {
   advance();
   advance();
 
-  genpreamble();
-  n = binexpr(0);
-  printf("%d\n", interpretAST(n));
-  genpostamble();
+  n = parse();
+  int reg;
+
+  cgpreamble();
+  reg = genAST(n);
+  cgprintint(reg);
+  cgpostamble();
 
   fclose(globals.outfile);
 

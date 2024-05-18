@@ -11,6 +11,7 @@ int cgloadglob(char *identifier);
 int cgadd(int r1, int r2);
 int cgsub(int r1, int r2);
 int cgmul(int r1, int r2);
+int cgnegate(int r);
 int cgdiv(int r1, int r2);
 void cgprintint(int r);
 int cgstorglob(int r, char *identifier);

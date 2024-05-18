@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include "../lexer/lexer.h"
+#include "../node/node.h"
 
 typedef struct {
   Token current;
@@ -23,5 +24,12 @@ bool check(TokenType type);
 bool checkNext(TokenType type);
 bool checkPrevious(TokenType type);
 bool match(TokenType type);
+
+int getPrecedence(TokenType type);
+ASTnode* parseBinaryOpRHS(int exprPrec, ASTnode* lhs);
+ASTnode* parseExpression();
+ASTnode* parseUnary();
+ASTnode* parsePrimary();
+ASTnode* parse();
 
 #endif

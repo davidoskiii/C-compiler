@@ -6,13 +6,13 @@ void genpostamble()       { cgpostamble(); }
 void genfreeregs()        { freeall_registers(); }
 void genprintint(int reg) { cgprintint(reg); }
 
-int genAST(struct ASTnode *n, int reg) {
+int genAST(ASTnode *n) {
   int leftreg, rightreg;
 
   if (n->left)
-    leftreg = genAST(n->left, -1);
+    leftreg = genAST(n->left);
   if (n->right)
-    rightreg = genAST(n->right, leftreg);
+    rightreg = genAST(n->right);
 
   switch (n->op) {
     case AST_ADD:
@@ -27,8 +27,8 @@ int genAST(struct ASTnode *n, int reg) {
       return (cgloadint(n->v.intvalue));
     case AST_IDENT:
       return (cgloadglob(globals.gsym[n->v.id].name));
-    case AST_LVIDENT:
-      return (cgstorglob(reg, globals.gsym[n->v.id].name));
+//    case AST_LVIDENT:
+//      return (cgstorglob(reg, globals.gsym[n->v.id].name));
     case AST_ASSIGN:
       return (rightreg);
     case AST_EQ:
@@ -43,6 +43,8 @@ int genAST(struct ASTnode *n, int reg) {
       return (cglessequal(leftreg, rightreg));
     case AST_GE:
       return (cggreaterequal(leftreg, rightreg));
+    case AST_NEGATE:
+      return (cgnegate(leftreg));
     default:
       fprintf(stderr, "Unknown AST operator %d\n", n->op);
       exit(1);

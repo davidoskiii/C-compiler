@@ -154,10 +154,7 @@ static Token number() {
     return errorToken("Short's need to be implemented");
   }
 
-  int value = strtol((lexer.current - 1), NULL, 10);
-  Token intval = makeToken(TOKEN_INTVAL);
-  intval.intvalue = value;
-  return intval;
+  return makeToken(TOKEN_INTVAL);
 }
 
 Token scanToken() {
@@ -171,6 +168,8 @@ Token scanToken() {
   if (isDigit(c)) return number();
 
   switch (c) {
+    case '(': return makeToken(TOKEN_LEFT_PAREN);
+    case ')': return makeToken(TOKEN_RIGHT_PAREN);
     case '-': return makeToken(TOKEN_MINUS);
     case '+': return makeToken(TOKEN_PLUS);
     case '/': return makeToken(TOKEN_SLASH);

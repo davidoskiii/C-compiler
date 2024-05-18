@@ -4,7 +4,7 @@
 #include "../node/node.h"
 #include "../assembly/assembly.h"
 
-int genAST(struct ASTnode *n, int reg);
+int genAST(ASTnode *n);
 
 void genpreamble();
 void genpostamble();
